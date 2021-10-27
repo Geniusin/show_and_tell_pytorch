@@ -27,7 +27,7 @@ class encoder(nn.Module):
 
 
 class decoder(nn.Module):
-    def __init__(self, vocab_size, embed_size, hidden_size, num_layers, max_seq_length=38):
+    def __init__(self, vocab_size, embed_size, hidden_size, num_layers, max_seq_length):
         super(decoder, self).__init__()
         self.max_seq_length = max_seq_length
         self.hidden_size = hidden_size

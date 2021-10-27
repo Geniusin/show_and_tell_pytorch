@@ -12,7 +12,6 @@ from torch.nn.utils.rnn import pack_padded_sequence
 import torch
 import torch.nn as nn
 
-
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print(f"device : {device}")
 
@@ -75,19 +74,18 @@ for epoch in range(EPOCHS):
 
         optimizer.step()
 
-    #
-    #     if i % 100 == 0:
-    #         print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Perplexity: {:5.4f}'
-    #               .format(epoch, EPOCHS, i, total_step, loss.item(), np.exp(loss.item())))
-    # if epoch % 10 == 0:
-    #     torch.save(encoder.state_dict(), f'./en_ver5_epoch{epoch}_fin.pth')
-    #     torch.save(decoder.state_dict(), f'./de_ver5_epoch{epoch}_fin.pth')
+        if i % 100 == 0:
+            print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Perplexity: {:5.4f}'
+                  .format(epoch, EPOCHS, i, total_step, loss.item(), np.exp(loss.item())))
+
+    if epoch % 10 == 0:
+        torch.save(encoder.state_dict(), f'./en_ver5_epoch{epoch}_fin.pth')
+        torch.save(decoder.state_dict(), f'./de_ver5_epoch{epoch}_fin.pth')
 
     end.record()
     torch.cuda.synchronize()
 
     print(f'{start.elapsed_time(end) / 1000} sec per epoch')
-
 
 torch.save(encoder.state_dict(), f'./en.pth')
 torch.save(decoder.state_dict(), f'./de.pth')

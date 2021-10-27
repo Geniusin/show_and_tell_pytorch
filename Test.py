@@ -1,26 +1,18 @@
 import pathlib
-import numpy as np
 import pandas as pd
-
-from torch.utils.data import DataLoader
-from data_loader.data_loader import dataLoader
-from torchvision import transforms
-from data_loader.data_loader import collate_fn
 import torch
-import torchvision.models as models
-import torch.nn as nn
-from torch.nn.utils.rnn import pack_padded_sequence
-import matplotlib.pyplot as plt
-from nltk.tokenize import word_tokenize
+
 from model.model import encoder, decoder
+from data_loader.data_loader import collate_fn
+from data_loader.data_loader import dataLoader
+
+from torchvision import transforms
+from torch.utils.data import DataLoader
 from collections import Counter
 from PIL import Image
-import re
+from nltk.tokenize import word_tokenize
 
-import cv2
 
-image_path = './vid2jpg/00840.jpg'
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 def load_image(image_path, transform=None):
     image = Image.open(image_path).convert('RGB')
     image = image.resize([224, 224], Image.LANCZOS)
@@ -30,6 +22,7 @@ def load_image(image_path, transform=None):
 
     return image
 
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 transform = transforms.Compose([
         transforms.Resize((224, 224)),
@@ -57,7 +50,6 @@ for caption in captions:
     tokens = word_tokenize(caption.lower())
     counter.update(tokens)
 
-
 words = []
 words.append('<pad>')
 words.append('<start>')
@@ -81,9 +73,6 @@ for cap in captions:
     tmp.extend([word2idx[tok] for tok in tokens])
     caps.append(tmp)
 
-######################################################
-
-
 dataset = dataLoader(root=root, transform=transform)
 data_loader = torch.utils.data.DataLoader(dataset=dataset, batch_size=32, shuffle=True,
                                           collate_fn=collate_fn)
@@ -97,7 +86,8 @@ encoder = encoder().eval().to(device)
 decoder = decoder(vocab_size=vocab_size,
                   embed_size=embed_size,
                   hidden_size=hidden_size,
-                  num_layers=1).to(device)
+                  num_layers=1,
+                  max_seq_length=dataset.maxLen).to(device)
 
 
 encoder_path = './en.pth'
@@ -108,9 +98,9 @@ decoder.load_state_dict(torch.load(decoder_path))
 
 #################################
 
-path = pathlib.Path('./test.jpg')
+imagePath = pathlib.Path('./test_img.jpg')
 
-image = load_image(path, transform)
+image = load_image(imagePath, transform)
 image_tensor = image.to(device)
 
 feature = encoder(image_tensor)

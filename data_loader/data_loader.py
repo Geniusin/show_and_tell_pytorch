@@ -1,13 +1,13 @@
 import pandas as pd
 import torch
 import pathlib
-import torch.utils.data as data
+
+
 from torch.utils.data import Dataset
 from collections import Counter
 from PIL import Image
-import nltk
-import re
 from nltk.tokenize import word_tokenize
+
 
 class dataLoader(Dataset):
     def __init__(self, root, transform):
@@ -15,7 +15,7 @@ class dataLoader(Dataset):
         self.word2idx = {}
         self.idx2word = {}
         self.transform = transform
-        self.idx = 0
+        self.maxLen = 0
 
         pathData = root / 'captions.txt'
         with open(pathData) as f:
@@ -43,15 +43,16 @@ class dataLoader(Dataset):
             self.idx2word[i] = word
 
         self.caps = []
+
         for cap in captions:
             tmp = []
             tokens = word_tokenize(cap.lower())
+            if len(tokens) > self.maxLen:
+                self.maxLen = len(tokens)
             tmp.extend([self.call_w2i(tok) for tok in tokens])
             self.caps.append(tmp)
 
-
     def __getitem__(self, i):
-
         path = self.root / 'Images' / f'{self.fileNames[i]}'
         image = Image.open(path).convert('RGB')
 
@@ -65,7 +66,6 @@ class dataLoader(Dataset):
 
     def __len__(self):
         return self.sizeCaps
-
 
     def call_w2i(self, word):
         if not word in self.word2idx:
