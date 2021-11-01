@@ -41,7 +41,7 @@ decoder = decoder(vocab_size=vocab_size,
                   embed_size=embed_size,
                   hidden_size=hidden_size,
                   num_layers=1,
-                  max_seq_length=dataset.maxLen).to(device)
+                  max_seq_length=dataset.max_length_of_caption).to(device)
 
 criterion = nn.NLLLoss()
 params = list(decoder.parameters()) + list(encoder.linear.parameters()) + list(encoder.bn.parameters())
@@ -76,8 +76,8 @@ for epoch in range(EPOCHS):
         optimizer.step()
 
         if i % 100 == 0:
-            print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Perplexity: {:5.4f}'
-                  .format(epoch, EPOCHS, i, total_step, loss.item(), np.exp(loss.item())))
+            print(f'Epoch [{epoch}/{EPOCHS}], Step [{i}/{total_step}], Loss: {loss.item():.4f}'
+                  f', Perplexity: {np.exp(loss.item()):.4f}')
 
     if epoch % 10 == 0:
         torch.save(encoder.state_dict(), f'./en_epoch{epoch}_fin.pth')

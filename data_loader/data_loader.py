@@ -14,16 +14,14 @@ class dataLoader(Dataset):
         self.word2idx = {}
         self.idx2word = {}
         self.transform = transform
-        self.maxLen = 0
+        self.max_length_of_caption = 0
 
-        pathData = root / 'captions.txt'
-        with open(pathData) as f:
-            npData = pd.read_csv(f).to_numpy()
+        path_txt = root / 'captions.txt'
+        with open(path_txt) as f:
+            data = pd.read_csv(f).to_numpy()
 
-        self.fileNames = npData[:, 0]  # 1 img have 5 captions
-        captions = npData[:, 1]
-
-        self.sizeCaps = len(captions)
+        self.file_names = data[:, 0]  # 1 img have 5 captions
+        captions = data[:, 1]
 
         counter = Counter()
         for caption in captions:
@@ -41,30 +39,31 @@ class dataLoader(Dataset):
             self.word2idx[word] = i
             self.idx2word[i] = word
 
-        self.caps = []
+        self.captions = []
 
         for cap in captions:
             tmp = []
             tokens = word_tokenize(cap.lower())
-            if len(tokens) > self.maxLen:
-                self.maxLen = len(tokens)
+            if len(tokens) > self.max_length_of_caption:
+                self.max_length_of_caption = len(tokens)
             tmp.extend([self.call_w2i(tok) for tok in tokens])
-            self.caps.append(tmp)
+            self.captions.append(tmp)
 
     def __getitem__(self, i):
-        path = self.root / 'Images' / f'{self.fileNames[i]}'
+        path = self.root / 'Images' / f'{self.file_names[i]}'
         image = Image.open(path).convert('RGB')
+        image = self.transform(image)
 
         caption = []
         caption.append(self.word2idx['<start>'])
-        caption.extend(self.caps[i])
+        caption.extend(self.captions[i])
         caption.append(self.word2idx['<end>'])
 
         caption = torch.LongTensor(caption)
-        return self.transform(image), caption
+        return image, caption
 
     def __len__(self):
-        return self.sizeCaps
+        return len(self.file_names)
 
     def call_w2i(self, word):
         if not word in self.word2idx:

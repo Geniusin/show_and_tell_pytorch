@@ -42,10 +42,10 @@ class decoder(nn.Module):
         embeddings = self.embedding(captions) # [n, 512] [len, embed_size]
         inputs = torch.cat((feature.unsqueeze(1), embeddings), dim=1)
         packed = pack_padded_sequence(inputs, lengths, batch_first=True)
-        hiddens, _ = self.lstm(packed)
-        out_d = self.linear(hiddens[0])
+        outputs, _ = self.lstm(packed)
+        out_lin = self.linear(outputs[0])
 
-        output = self.softmax(out_d)
+        output = self.softmax(out_lin)
 
         return output
 
@@ -54,8 +54,8 @@ class decoder(nn.Module):
         sampled_ids = []
         inputs = features.unsqueeze(1)
         for i in range(self.max_seq_length):
-            hiddens, states = self.lstm(inputs, states)          # hiddens: (batch_size, 1, hidden_size)
-            outputs = self.linear(hiddens.squeeze(1))            # outputs:  (batch_size, vocab_size)
+            outputs, states = self.lstm(inputs, states)          # hiddens: (batch_size, 1, hidden_size)
+            outputs = self.linear(outputs.squeeze(1))            # outputs:  (batch_size, vocab_size)
             _, predicted = outputs.max(1)                        # predicted: (batch_size)
             sampled_ids.append(predicted)
             inputs = self.embedding(predicted)                       # inputs: (batch_size, embed_size)

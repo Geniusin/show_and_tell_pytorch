@@ -4,9 +4,9 @@ import torch
 import nltk
 import numpy as np
 
-from model.model_injected import encoder, decoder
-from data_loader.data_loader_injected import collate_fn
-from data_loader.data_loader_injected import dataLoader
+from model.model_injection import encoder, decoder
+from data_loader.data_loader_injection import collate_fn
+from data_loader.data_loader_injection import dataLoader
 
 from torchvision import transforms
 from torch.utils.data import DataLoader
@@ -35,20 +35,21 @@ transform = transforms.Compose([
 
 root = pathlib.Path('./datasets')
 
-pathData = root / 'captions.txt'
+path_txt = root / 'captions.txt'
 
-with open(pathData) as f:
-    npData = pd.read_csv(f).to_numpy()
+with open(path_txt) as f:
+    data = pd.read_csv(f).to_numpy()
 
-with open('./att.txt') as f:
-    kwData = pd.read_csv(f).to_numpy()
-keydata = np.delete(kwData, (np.where(kwData[:, 1] == ' ')), axis=0)
-npData = np.delete(npData, (np.where(kwData[:, 1] == ' ')), axis=0)
+with open('./attributes.txt') as f:
+    attributes = pd.read_csv(f).to_numpy()
 
-keys = keydata[:, 1]
+attributes = np.delete(attributes, (np.where(attributes[:, 1] == ' ')), axis=0)
+data = np.delete(data, (np.where(attributes[:, 1] == ' ')), axis=0)
 
-fileNames = npData[:, 0]# 1 img have 5 captions
-captions = npData[:, 1]
+keywords = attributes[:, 1]
+
+fileNames = data[:, 0]
+captions = data[:, 1]
 
 sizeCaps = len(captions)
 
@@ -82,7 +83,7 @@ for cap in captions:
     caps.append(tmp)
 
 kwords = []
-for key in keys:
+for key in keywords:
     kwords.append(word2idx[key])
 
 dataset = dataLoader(root=root, transform=transform)
@@ -99,20 +100,20 @@ decoder = decoder(vocab_size=vocab_size,
                   embed_size=embed_size,
                   hidden_size=hidden_size,
                   num_layers=1,
-                  max_seq_length=dataset.maxLen).to(device)
+                  max_seq_length=dataset.max_length_of_caption).to(device)
 
 
-encoder_path = './en_inj_dense100.pth'
-decoder_path = './de_inj_dense100.pth'
+encoder_path = './pth/en_inj_dense100.pth'
+decoder_path = './pth/de_inj_dense100.pth'
 
 encoder.load_state_dict(torch.load(encoder_path))
 decoder.load_state_dict(torch.load(decoder_path))
 
 
-imagePath = pathlib.Path('./image_4.jpg')
+image_path = pathlib.Path('./sample_image/test_img.jpg')
 
 
-image = load_image(imagePath, transform)
+image = load_image(image_path, transform)
 image_tensor = image.to(device)
 
 feature = encoder(image_tensor)

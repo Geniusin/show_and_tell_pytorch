@@ -33,16 +33,13 @@ transform = transforms.Compose([
 
 root = pathlib.Path('./datasets')
 
-pathData = root / 'captions.txt'
+path_txt = root / 'captions.txt'
 
-with open(pathData) as f:
-    npData = pd.read_csv(f).to_numpy()
+with open(path_txt) as f:
+    data = pd.read_csv(f).to_numpy()
 
-fileNames = npData[:, 0:5][::5] # 1 img have 5 captions
-
-captions = npData[:, 1]
-
-sizeCaps = len(captions)
+file_names = data[:, 0]
+captions = data[:, 1]
 
 counter = Counter()
 
@@ -87,20 +84,20 @@ decoder = decoder(vocab_size=vocab_size,
                   embed_size=embed_size,
                   hidden_size=hidden_size,
                   num_layers=1,
-                  max_seq_length=dataset.maxLen).to(device)
+                  max_seq_length=dataset.max_length_of_caption).to(device)
 
 
-encoder_path = './en_1030.pth'
-decoder_path = './de_1030.pth'
+encoder_path = './pth/en_1030.pth'
+decoder_path = './pth/de_1030.pth'
 
 encoder.load_state_dict(torch.load(encoder_path))
 decoder.load_state_dict(torch.load(decoder_path))
 
 #################################
 
-imagePath = pathlib.Path('./image_4.jpg')
+image_path = pathlib.Path('./sample_image/test_img.jpg')
 
-image = load_image(imagePath, transform)
+image = load_image(image_path, transform)
 image_tensor = image.to(device)
 
 feature = encoder(image_tensor)

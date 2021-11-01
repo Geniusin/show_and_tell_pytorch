@@ -35,8 +35,9 @@ class decoder(nn.Module):
         self.lstm = nn.LSTM(embed_size, hidden_size, num_layers)
         self.linear = nn.Linear(hidden_size, vocab_size)
         self.softmax = nn.LogSoftmax(dim=1)
-
         self.linear2 = nn.Linear(hidden_size, hidden_size)
+
+
     def forward(self,  captions, feature, lengths, attributes):
         """Decode image feature vectors and generates captions."""
 
@@ -47,10 +48,10 @@ class decoder(nn.Module):
 
         inputs = torch.cat((self.linear2(attribute), injected), dim=1)
         packed = pack_padded_sequence(inputs, lengths, batch_first=True)
-        hiddens, _ = self.lstm(packed)
-        out_d = self.linear(hiddens[0])
+        outputs, _ = self.lstm(packed)
+        out_lin = self.linear(outputs[0])
 
-        output = self.softmax(out_d)
+        output = self.softmax(out_lin)
 
         return output
 
@@ -59,8 +60,8 @@ class decoder(nn.Module):
         sampled_ids = []
         inputs = features.unsqueeze(1)
         for i in range(self.max_seq_length):
-            hiddens, states = self.lstm(inputs, states)          # hiddens: (batch_size, 1, hidden_size)
-            outputs = self.linear(hiddens.squeeze(1))            # outputs:  (batch_size, vocab_size)
+            outputs, states = self.lstm(inputs, states)          # hiddens: (batch_size, 1, hidden_size)
+            outputs = self.linear(outputs.squeeze(1))            # outputs:  (batch_size, vocab_size)
             _, predicted = outputs.max(1)                        # predicted: (batch_size)
             sampled_ids.append(predicted)
             inputs = self.embedding(predicted)                       # inputs: (batch_size, embed_size)
