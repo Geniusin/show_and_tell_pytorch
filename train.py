@@ -27,7 +27,7 @@ root = pathlib.Path('./datasets')
 
 
 dataset = dataLoader(root=root, transform=transform)
-data_loader = torch.utils.data.DataLoader(dataset=dataset, batch_size=2, shuffle=True,
+data_loader = torch.utils.data.DataLoader(dataset=dataset, batch_size=64, shuffle=True,
                                           collate_fn=collate_fn)
 vocab_size = len(dataset.words)
 
@@ -40,7 +40,8 @@ encoder = encoder().to(device)
 decoder = decoder(vocab_size=vocab_size,
                   embed_size=embed_size,
                   hidden_size=hidden_size,
-                  num_layers=1).to(device)
+                  num_layers=1,
+                  max_seq_length=dataset.maxLen).to(device)
 
 criterion = nn.NLLLoss()
 params = list(decoder.parameters()) + list(encoder.linear.parameters()) + list(encoder.bn.parameters())
@@ -51,7 +52,7 @@ total_step = len(data_loader)
 start = torch.cuda.Event(enable_timing=True)
 end = torch.cuda.Event(enable_timing=True)
 
-EPOCHS = 1
+EPOCHS = 20
 for epoch in range(EPOCHS):
     start.record()
     for i, (images, captions, lengths) in enumerate(data_loader):
@@ -79,13 +80,13 @@ for epoch in range(EPOCHS):
                   .format(epoch, EPOCHS, i, total_step, loss.item(), np.exp(loss.item())))
 
     if epoch % 10 == 0:
-        torch.save(encoder.state_dict(), f'./en_ver5_epoch{epoch}_fin.pth')
-        torch.save(decoder.state_dict(), f'./de_ver5_epoch{epoch}_fin.pth')
+        torch.save(encoder.state_dict(), f'./en_epoch{epoch}_fin.pth')
+        torch.save(decoder.state_dict(), f'./de_epoch{epoch}_fin.pth')
 
     end.record()
     torch.cuda.synchronize()
 
     print(f'{start.elapsed_time(end) / 1000} sec per epoch')
 
-torch.save(encoder.state_dict(), f'./en.pth')
-torch.save(decoder.state_dict(), f'./de.pth')
+torch.save(encoder.state_dict(), f'./en_1030.pth')
+torch.save(decoder.state_dict(), f'./de_1030.pth')

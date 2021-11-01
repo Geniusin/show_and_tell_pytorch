@@ -4,23 +4,22 @@ import torchvision.models as models
 from torch.nn.utils.rnn import pack_padded_sequence
 
 
-
 class encoder(nn.Module):
     def __init__(self):
         super(encoder, self).__init__()
 
         resnet = models.resnet50(pretrained=True)
-        modules = list(resnet.children())[:-1] # resnet 마지막에 붙어있는 fc 제거
+        modules = list(resnet.children())[:-1]
 
-        self.resnet = nn.Sequential(*modules) # 리스트로 변환된 resnet의 모듈들을 하나로 묶음
+        self.resnet = nn.Sequential(*modules)
         self.linear = nn.Linear(resnet.fc.in_features, 512)
         self.bn = nn.BatchNorm1d(512, momentum=0.01)
 
     def forward(self, images):
         with torch.no_grad():
             features = self.resnet(images)
-        features = features.view(features.size(0), -1) # Flatten
-        features = self.linear(features)  # [, 512)
+        features = features.view(features.size(0), -1)
+        features = self.linear(features)
         features = self.bn(features)
 
         return features
